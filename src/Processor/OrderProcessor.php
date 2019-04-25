@@ -46,16 +46,16 @@ class OrderProcessor
         }
 
         if (request('agent_code')) {
-            $this->event->fire('agent.user.relation', [request('agent_code'), $order->user_id]);
+            event('agent.user.relation', [request('agent_code'), $order->user_id]);
         }
 
         if (request('shop_id')) {
-            $this->event->fire('shop.user.submitOrder', [$order->user_id]);
+            event('shop.user.submitOrder', [$order->user_id]);
         }
 
         if ($order->channel == 'ec') { //如果是电商订单
-            $this->event->fire('order.submitted', [$order]);
-            $this->event->fire('purchase.record.on.order.submitted', [$order->id, $order->user_id]);
+            event('order.submitted', [$order]);
+            event('purchase.record.on.order.submitted', [$order->id, $order->user_id]);
         }
 
     }
@@ -72,14 +72,14 @@ class OrderProcessor
             $order->status = Order::STATUS_PAY;
             $order->pay_status = 1;
             $order->save();
-            $this->event->fire('order.paid', [$order]);
+            event('order.paid', [$order]);
         } else {
             if ($order->total <= $order->getPaidAmount()) {
                 $order->status = Order::STATUS_PAY;
                 $order->pay_time = Carbon::now();
                 $order->pay_status = 1;
                 $order->save();
-                $this->event->fire('order.paid', [$order]);
+                event('order.paid', [$order]);
             } else {
                 $order->save();
             }
@@ -95,7 +95,7 @@ class OrderProcessor
             $order->save();
             event('order.canceled', $order->id);
             event('agent.order.canceled', $order->id);
-            $this->event->fire('purchase.record.on.order.cancel', [$order->id, $order->user_id]);
+            event('purchase.record.on.order.cancel', [$order->id, $order->user_id]);
 
             return true;
         }
@@ -107,7 +107,7 @@ class OrderProcessor
         $order->status = Order::STATUS_RECEIVED;
         $order->accept_time = Carbon::now();
         $order->save();
-        $this->event->fire('order.received', [$order]);
+        event('order.received', [$order]);
     }
 
     public function delete($order)
